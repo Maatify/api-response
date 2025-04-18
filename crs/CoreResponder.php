@@ -18,7 +18,6 @@ declare(strict_types=1);
 
 namespace Maatify\ApiResponse;
 
-use JetBrains\PhpStorm\NoReturn;
 use Psr\Http\Message\ResponseInterface;
 use Maatify\SlimLogger\Log\Logger;
 use Maatify\SlimLogger\Log\LogLevelEnum;
@@ -38,8 +37,10 @@ abstract class CoreResponder
     {
         if (!empty($_ENV['JSON_POST_LOG'])) {
             $post = $_POST;
-            if (isset($post['password'])) {
-                $post['password'] = '******';
+            foreach (['password', 'token'] as $sensitive) {
+                if (isset($post[$sensitive])) {
+                    $post[$sensitive] = '******';
+                }
             }
 
             $logData = [
@@ -62,9 +63,7 @@ abstract class CoreResponder
         }
     }
 
-
-    #[NoReturn]
-    public static function headerResponseJson(ResponseInterface $response, array $data): ResponseInterface
+    public static function headerResponseJson(ResponseInterface $response, array $data, int $status = 200): ResponseInterface
     {
         self::logResponse($data);
 
@@ -72,10 +71,11 @@ abstract class CoreResponder
             json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         );
 
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withStatus($status);
     }
 
-    #[NoReturn]
     public static function errorWithHeader400(
         ResponseInterface $response,
         int $code,
@@ -84,35 +84,34 @@ abstract class CoreResponder
         string $moreInfo = '',
         int|string $line = 0
     ): ResponseInterface {
-        return self::headerResponseJson($response->withStatus(400), [
+        return self::headerResponseJson($response, [
             'success'       => false,
             'response'      => $code,
             'var'           => $varName,
             'description'   => $description,
             'more_info'     => $moreInfo,
             'error_details' => self::generateErrorTrace($line),
-        ]);
+        ], 400);
     }
 
-    #[NoReturn]
     public static function headerResponseError(ResponseInterface $response, int $code, string $desc, string $more = '', string|int $line = ''): ResponseInterface
     {
-        return self::headerResponseJson($response->withStatus($code), [
+        return self::headerResponseJson($response, [
             'success'       => false,
             'response'      => $code,
             'description'   => $desc,
             'more_info'     => $more,
             'error_details' => self::generateErrorTrace($line),
-        ]);
+        ], $code);
     }
 
-    #[NoReturn]
     public static function headerResponseSuccess(ResponseInterface $response, array $data): ResponseInterface
     {
         return self::headerResponseJson($response, array_merge([
             'success' => true,
             'response' => 200,
             'description' => '',
-        ], $data));
+        ], $data), 200);
     }
 }
+

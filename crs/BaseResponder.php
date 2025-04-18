@@ -19,11 +19,9 @@ declare(strict_types=1);
 namespace Maatify\ApiResponse;
 
 use Psr\Http\Message\ResponseInterface;
-use JetBrains\PhpStorm\NoReturn;
 
 abstract class BaseResponder extends CoreResponder
 {
-    #[NoReturn]
     protected static function postErrorHandler(ResponseInterface $response, string $varName, int $codeRange, string $moreInfo = '', int|string $line = 0): ResponseInterface
     {
         return self::errorWithHeader400(
