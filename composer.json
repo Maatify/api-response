@@ -1,7 +1,7 @@
 {
   "name": "maatify/api-response",
   "description": "Slim-compatible JSON API response handler for validation, errors, and success messages.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "library",
   "keywords": [
     "maatify",

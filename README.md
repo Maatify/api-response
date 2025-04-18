@@ -24,6 +24,7 @@
 - ✅ Automatic route+line trace: `user:login::55`
 - ✅ Production-safe JSON POST logging via [maatify/slim-logger](https://github.com/maatify/slim-logger)
 - ✅ Environment toggles for logging
+- ✅ Optional `JsonResponseEmitter` for non-framework use
 
 ---
 
@@ -52,12 +53,13 @@ $app->post('/register', function ($request, $response) {
 
 ## 💡 Usage in Pure PHP (no framework)
 
-You can use this library even in basic PHP without Slim.
+Use the built-in `JsonResponseEmitter` class to send PSR-7 responses directly in native PHP.
 
 ```php
 require 'vendor/autoload.php';
 
 use Maatify\ApiResponse\Json;
+use Maatify\ApiResponse\JsonResponseEmitter;
 use Nyholm\Psr7\Response;
 
 $response = new Response();
@@ -66,13 +68,7 @@ if (empty($_POST['email'])) {
     $response = Json::missing($response, 'email', 'Email is required', __LINE__);
 }
 
-http_response_code($response->getStatusCode());
-foreach ($response->getHeaders() as $name => $values) {
-    foreach ($values as $value) {
-        header("$name: $value");
-    }
-}
-echo (string)$response->getBody();
+JsonResponseEmitter::emit($response);
 ```
 
 ---
@@ -177,6 +173,7 @@ src/
 ├── CoreResponder.php        # Base logic + logger
 ├── BaseResponder.php        # Validation & error helpers
 └── Json.php                 # Final static entrypoint class
+└── JsonResponseEmitter.php  # Sends PSR-7 responses in native PHP
 ```
 
 ---
